@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect # type: ignore
-from .models import Product
+from .models import Product, Category
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -10,7 +10,9 @@ from django import forms
 # Create your views here.
 def home(request):
     products = Product.objects.all()
-    return render(request, 'home.html', {'products': products})
+    return render(request, 'home.html', {
+        'products': products
+    })
 
 def about(request):
     return render(request, 'about.html')
@@ -23,7 +25,7 @@ def login_user(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, ('You have been logged in!'))
+            messages.success(request, 'You have been logged in!')
             return redirect('home')
         else:
             messages.success(request, 'There was an error, please try agin...')
@@ -33,7 +35,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    messages.success(request, ('You have been logged out...'))
+    messages.success(request, 'You have been logged out...')
     return redirect('home')
 
 def register_user(request):
@@ -46,14 +48,31 @@ def register_user(request):
             password = form.cleaned_data['password1']
             user = authenticate(username=username, password=password)
             login(request, user)
-            messages.success(request, ('You have registered successfully...'))
+            messages.success(request, 'You have registered successfully...')
             return redirect('home')
         else:
-            messages.success(request, ('Oops! There was a problem Registering, Please Try again!'))
+            messages.success(request, 'Oops! There was a problem Registering, Please Try again!')
             return redirect('register')
 
-    return render(request, 'register.html', {'form': form})
+    return render(request, 'register.html', {
+        'form': form
+    })
 
 def product(request, pk):
     product = Product.objects.get(id=pk)
-    return render(request, 'product.html', {'product': product})
+    return render(request, 'product.html', {
+        'product': product
+    })
+
+def category(request, ctg):
+    ctg = ctg.replace('-', ' ')
+    try:
+         category = Category.objects.get(name=ctg)
+         products = Product.objects.filter(category=category)
+         return render(request, 'category.html', {
+             'products': products,
+             'category': category
+         })
+    except:
+        messages.success(request, 'That category doesn\'t exist...')
+        return redirect('home')
